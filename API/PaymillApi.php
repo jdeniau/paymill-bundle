@@ -142,8 +142,6 @@ class PaymillApi extends Request
     /**
      * getTransactionFromPayment
      *
-     * This weird implementation is due to this bug:https://github.com/paymill/paymill-php/issues/69
-     *
      * @param mixed $payment
      * @access public
      * @return void
@@ -152,22 +150,20 @@ class PaymillApi extends Request
     {
         $paymillTransaction = new \Paymill\Models\Request\Transaction();
         $paymillTransaction->setPayment($payment);
-        $apiTransactionList = $this->getAll($paymillTransaction);
-        $apiTransaction = array_pop($apiTransactionList);
-
-        $response = array(
-            'header' => array(
-                'status' => 200,
-            ),
-            'body' => array(
-                'data' => $apiTransaction,
-            ),
+        
+        $paymillTransaction->setFilter(
+            array(
+                'payment' => $payment,
+                'count' => 1,
+                'offset' => 0
+            )
         );
 
-
+        $apiTransactionList = $this->getAll($paymillTransaction);
+        $apiTransaction = $apiTransactionList[0];
 
         $handler = new \Paymill\Services\ResponseHandler;
-        $response = $handler->convertResponse($response, 'Transaction/ ');
+        $response = $handler->convertResponse($apiTransaction, 'Transaction/ ');
 
         return $response;
     }
